@@ -1,0 +1,4 @@
+*.csv
+parsing/*.cbl
+*.json
+parsing/__pycache__/*
