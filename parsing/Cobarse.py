@@ -36,41 +36,38 @@ class RecDParser:
         print("ERROR invalid token", token_value(token), "on line", token_line(token), f"expected any of [{ ','.join(expected) }]" )
         
     
-    def program_id_cobol_source_program(self) -> ASTser.ProgramID:
-
-        progid = ASTser.ProgramID()
-        if not self.matchTokenWithAny(self.current, "PROGRAM-ID"):
-            return progid
-        self.matchTokenWithAny(self.current, ".")
-        if is_token_of_kind(self.current, "SYMBOL"):
-            progid.ID = token_value(self.current)
-            self.nextToken()
-        if not token_value(self.current) == ".":
-            self.syntax_error(self.current, ".")
-            return progid
-        
-        #optional part
-        reading_offset = 0
-        if self.matchLookAheadWith(reading_offset, "IS"):
-            reading_offset += 1 
-            if self.matchTokenWithAny(self.tokens[reading_offset], "INITIAL"):
-                progid.initial = True
-                reading_offset += 1
-            else:
-                return None
-            if self.matchLookAheadWith(reading_offset, "PROGRAM"):
-                reading_offset += 1
-        elif self.matchLookAheadWith(reading_offset, "INITIAL"):
-            progid.initial = True
-            reading_offset += 1
-            if self.matchLookAheadWith(reading_offset, "PROGRAM"):
-                reading_offset += 1
-
-        if self.matchLookAheadWith(reading_offset, "."):
-            reading_offset += 1
+    def program_id_cobol_source_program(self) :
+        def Optional1():
+            if token_value(self.current) == ".":
+                self.nextToken()
+        def Optional2():
             
-        self.skipXtoken(reading_offset)
-        return progid
+            if Optional3() and not token_value(self.current) == "INITIAL":
+                self.syntax_error(self.current, ["INITIAL"])
+                return None
+            self.nextToken()
+    
+            Optional4()
+        def Optional3():
+            if token_value(self.current) == "IS":
+                self.nextToken()
+                return True
+            return False
+        def Optional4():
+            if token_value(self.current) == "PROGRAM":
+                self.nextToken()
+
+        ############ START ###################       
+        # progid = ASTser.ProgramID()
+        if not self.matchTokenWithAny(self.current, "PROGRAM-ID"):
+            return None
+        Optional1()
+        if is_token_of_kind(self.current, "SYMBOL"):
+            # progid.ID = token_value(self.current)
+            self.nextToken()
+        Optional2()
+        Optional1()
+        
 
     def cobol_source_program(self):
         self.nextToken()
