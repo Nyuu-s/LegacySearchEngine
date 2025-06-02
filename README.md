@@ -1,2 +1,2 @@
 # LegacySearchEngine
-A tool to analyse legacy code
+☕ A tool to analyse legacy code ☕
