@@ -1,20 +1,20 @@
 
 #include <stdio.h>
 
-#define ASKB(k) k/1024
-#define ASMB(k) ASKB(k)/1024
-#define ASGB(k) ASMB(k)/1024
-
-#define KB(k) k*1024
-#define MB(k) KB(k)*1024
-#define GB(k) MB(k)*1024
+#define KB(x) ((unsigned long long)1024 * x)
+#define MB(x) ((unsigned long long)1024 * KB(x))
+#define GB(x) ((unsigned long long)1024 * MB(x))
+#define KBSIZE KB(1)
+#define MBSIZE MB(1)
+#define GBSIZE GB(1)
 
 #define MAX_OPEN_FILESIZE MB(500)
 
-void open_file(char* file_path){
+void load_file_in(char* file_path, void* out){
     
     FILE* fd = fopen(file_path, "r");
     if(fd == NULL){
+        printf("Couldn't open file");
         return;
     }
     fseek(fd, 0, SEEK_END);
@@ -22,11 +22,11 @@ void open_file(char* file_path){
     fclose(fd);
 
     if(size < MAX_OPEN_FILESIZE){
-        printf("Small file: load all in memory");
+        printf("%lld Small file: read all in memory", size/KBSIZE);
     } 
     else
     {
-        printf("%ld Large file: read in blocs", KB(size));
+        printf("%lld Large file: read in blocs", size/KBSIZE);
     }
     
 

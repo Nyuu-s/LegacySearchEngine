@@ -3,5 +3,5 @@
 
 int main()
 {
-    open_file("E:/Projects/C/LegacySearchEngine/src/parsing/LR1/grammar.gmr");
+    load_file_in("E:/Projects/C/LegacySearchEngine/src/parsing/LR1/grammar.gmr", NULL);
 }
