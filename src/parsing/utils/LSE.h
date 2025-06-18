@@ -1,10 +1,9 @@
 #pragma once
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
-#ifdef WIN32
-#include "window.h"
-#endif
+
 
 
 #define KB(x) ((unsigned long long)1024 * x)
@@ -19,19 +18,20 @@
 // #############################
 // #		Arena Alocator
 // #############################
-struct LSEArena
+
+typedef struct LSEArena
 {
     char* data;
     size_t offset;
     size_t capacity;
-    LSEArena* next;
+    struct LSEArena* next;
 
-} typedef LSEArena;
+} LSEArena;
 
 LSEArena arena_create(size_t size);
 char* arena_alloc(LSEArena* arena, size_t size);
 
-LSEArena arena_create(int size){
+LSEArena arena_create(size_t size){
     LSEArena arena = {0};
     arena.data = (char*) malloc(size);
     if(arena.data){
@@ -79,7 +79,7 @@ LSEFileHandle open_file_handle(char* file_path){
     if(fd == NULL)
     {
         printf("Error: Couldn't open file %s", *file_path);
-        return;
+        return file;
     }
     //TODO: replace by OS api
     fseek(fd, 0, SEEK_END);
