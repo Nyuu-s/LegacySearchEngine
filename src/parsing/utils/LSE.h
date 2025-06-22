@@ -78,7 +78,7 @@ LSEFileHandle open_file_handle(char* file_path){
     FILE* fd = fopen(file_path, "rb");
     if(fd == NULL)
     {
-        printf("Error: Couldn't open file %s", *file_path);
+        printf("Error: Couldn't open file %s\n", file_path);
         return file;
     }
     //TODO: replace by OS api
