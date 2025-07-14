@@ -21,11 +21,11 @@
 
 #define LSELOGMSG(level, msg)                               \
 do {                                                        \
-    char buffer[10];                                         \
+    char buffer[10];                                        \
     time_t now = time(NULL);                                \
     struct tm *local = localtime(&now);                     \
-    strftime(buffer, sizeof(buffer), "%H:%M:%S", local);         \
-    printf("[%s]-%s: %s\n", buffer,level, msg);          \
+    strftime(buffer, sizeof(buffer), "%H:%M:%S", local);    \
+    printf("[%s] - %s: %s\n", buffer,level, msg);           \
 } while(0);
 
 #define ERROR_LOG(msg) LSELOGMSG("ERROR",msg)
@@ -60,6 +60,7 @@ void arena_release(LSEArena* arena);
 
 LSEArena* arena_create(size_t size){
     LSEArena* arena = (LSEArena*) malloc(sizeof(LSEArena) + size);
+    LSE_ASSERT(arena, "Arena creation failed, probably a malloc failure");
     if (!arena) { return NULL; }
     arena->data = (char*) (arena + 1);
     arena->capacity = size;
@@ -70,9 +71,11 @@ LSEArena* arena_create(size_t size){
 }
 
 void* arena_alloc(LSEArena* arena, size_t size){
+    LSE_ASSERT(arena, "Cannot allocate in a NULL arena");
     if (!arena) { return NULL; }
     size_t aligned_size  = (size + 7) & ~7;
     if(arena->offset + aligned_size > arena->capacity){
+        LSE_ASSERT(0, "Arena is full !");
         return NULL;
     }
     void* result = arena->data + arena->offset;
@@ -82,6 +85,7 @@ void* arena_alloc(LSEArena* arena, size_t size){
 
 void arena_release(LSEArena* arena)
 {
+    LSE_ASSERT(arena, "Cannot free a NULL arena");
     if(!arena){return;}
     free(arena);
 }
@@ -102,11 +106,14 @@ typedef struct LSEDYNA{
 
 
 void* dyna_init(LSEArena* arena, size_t capacity, size_t item_size){
+    LSE_ASSERT(arena, "Cannot initilize a dynamic array with a NULL arena");
     if(!arena) {return NULL;}
+    LSE_ASSERT(item_size > 0, "Item size should not be 0 when calling dyna_init!");
     if (item_size == 0) { return NULL; }
 
     if(capacity == 0) {capacity = DYNA_INITIAL_CAPACITY;}
     LSEDYNA* res = (LSEDYNA*) arena_alloc(arena, (capacity * item_size) + sizeof(LSEDYNA));
+    LSE_ASSERT(res, "Arena allocation failed in dyna_init !");
     if(!res){return NULL;}
     res->capacity = capacity;
     res->length = 0;
@@ -116,12 +123,15 @@ void* dyna_init(LSEArena* arena, size_t capacity, size_t item_size){
 }
 
 void dyna_free(void* arr_data) {
+    LSE_ASSERT(arr_data, "NULL has been passed to dyna_free");
     if (!arr_data) { return; }
     LSEDYNA* array = ((LSEDYNA*) arr_data) - 1;
     arena_release(array->region);
 }
 
 void* dyna_append_item(void* arr_data, void* ptr_item, size_t item_size){
+    LSE_ASSERT(arr_data, "Cannot append to a NULL array");
+    LSE_ASSERT(ptr_item, "Cannot append a NULL item to the array");
     if(!arr_data || !ptr_item){return NULL;}
     LSEDYNA* array = ((LSEDYNA*) arr_data)-1;
     if (array->length >= array->capacity)
@@ -132,12 +142,15 @@ void* dyna_append_item(void* arr_data, void* ptr_item, size_t item_size){
         // {
         //     new_cap *= 2;
         // }
+        LSE_ASSERT(array->region, "The region pointer in the array is NULL");
         if(!array->region) {return NULL;}
         size_t new_size = sizeof(LSEDYNA) + new_cap * item_size;
         if(array->region->capacity < new_size){
             LSEArena* new_arena = arena_create(new_size);
+            LSE_ASSERT(new_arena, "Failed to create a new arena in dyna_append_item");
             if(!new_arena){return NULL;}
             LSEDYNA* new_arr = (LSEDYNA*) arena_alloc(new_arena, new_size);
+            LSE_ASSERT(new_arr, "Failed to allocate new size in the new arena in dyna_append_item");
             if(!new_arr){
                 arena_release(new_arena);
                 return NULL;
@@ -169,14 +182,15 @@ void* dyna_append_item(void* arr_data, void* ptr_item, size_t item_size){
 struct LSEFileHandle
 {
     FILE* descriptor;
-    long offset;
-    long size;
+    unsigned long offset;
+    unsigned long size;
 
 }typedef LSEFileHandle;
 
 LSEFileHandle open_file_handle(char* file_path){
     LSEFileHandle file = {0};
     FILE* fd = fopen(file_path, "rb");
+    LSE_ASSERT(fd, "Failed to open file !");
     if(fd == NULL)
     {
         printf("Error: Couldn't open file %s\n", file_path);
