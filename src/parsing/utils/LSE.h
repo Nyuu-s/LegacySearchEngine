@@ -3,7 +3,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-
+#include <time.h>
 
 
 #define KB(x) ((unsigned long long)1024 * x)
@@ -16,25 +16,47 @@
 #define MAX_OPEN_FILESIZE MB(500)
 
 // #############################
-// #		Arena Alocator
+// #		LOGGING
 // #############################
 
+#define LSELOGMSG(level, msg)                               \
+do {                                                        \
+    char buffer[10];                                         \
+    time_t now = time(NULL);                                \
+    struct tm *local = localtime(&now);                     \
+    strftime(buffer, sizeof(buffer), "%H:%M:%S", local);         \
+    printf("[%s]-%s: %s\n", buffer,level, msg);          \
+} while(0);
+
+#define ERROR_LOG(msg) LSELOGMSG("ERROR",msg)
+#define WARNING_LOG(msg) LSELOGMSG("WARNING", msg)
+#define INFO_LOG(msg) LSELOGMSG("INFO", msg)
+#define LSE_ASSERT(condition, message)                  \
+do{                                                     \
+    if (!(condition))                                   \
+    {                                                   \
+        LSELOGMSG("ASSERTION FAILED", message);        \
+        exit(1);                                        \
+    }                                                   \
+}while(0)
 
 
+// #############################
+// #		Allocators
+// #############################
 
-LSEArena* arena_create(size_t size);
-void* arena_alloc(LSEArena* arena, size_t size);
-void arena_release(LSEArena* arena);
 
 typedef struct LSEArena
 {
     char* data;
     size_t offset;
     size_t capacity;
-
+    
 } LSEArena;
 
-
+LSEArena* arena_create(size_t size);
+void* arena_alloc(LSEArena* arena, size_t size);
+void arena_release(LSEArena* arena);
 
 LSEArena* arena_create(size_t size){
     LSEArena* arena = (LSEArena*) malloc(sizeof(LSEArena) + size);
