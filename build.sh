@@ -1,1 +1,1 @@
-gcc -g "./src/parsing/utils/gParser.c" -o "./build/main.exe" -I"./src/parsing/utils/"
+gcc -g "./src/parsing/utils/lexeris.c" -o "./build/main.exe" -I"./src/parsing/utils/"

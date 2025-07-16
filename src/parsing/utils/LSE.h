@@ -2,6 +2,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdarg.h>
 #include <string.h>
 #include <time.h>
 
@@ -18,24 +19,34 @@
 // #############################
 // #		LOGGING
 // #############################
+#define BASE_FILENAME (strrchr(__FILE__, '/') ? strrchr(__FILE__, '/') + 1 : strrchr(__FILE__, '\\') ? strrchr(__FILE__, '\\') + 1 : __FILE__)
+#define LSELOGMSG(level,format,  ...)  log_message(level, BASE_FILENAME, __LINE__, format, ##__VA_ARGS__)                        
 
-#define LSELOGMSG(level, msg)                               \
-do {                                                        \
-    char buffer[10];                                        \
-    time_t now = time(NULL);                                \
-    struct tm *local = localtime(&now);                     \
-    strftime(buffer, sizeof(buffer), "%H:%M:%S", local);    \
-    printf("[%s] - %s: %s\n", buffer,level, msg);           \
-} while(0);
 
-#define ERROR_LOG(msg) LSELOGMSG("ERROR",msg)
-#define WARNING_LOG(msg) LSELOGMSG("WARNING", msg)
-#define INFO_LOG(msg) LSELOGMSG("INFO", msg)
-#define LSE_ASSERT(condition, message)                  \
+static void log_message(const char* level, const char* file, int line, const char* format, ...) {
+
+    char timebuffer[10];                                        
+    char msgbuffer[1024];
+    time_t now = time(NULL);                                
+    struct tm *local = localtime(&now);                     
+    strftime(timebuffer, sizeof(timebuffer), "%H:%M:%S", local); 
+    
+    va_list args;
+    va_start(args, format);
+    vsnprintf(msgbuffer, sizeof(msgbuffer), format, args);
+    va_end(args);
+    
+    printf("[%s] %s:%d - %s: %s\n",timebuffer,file, line, level, msgbuffer);           
+}
+
+#define ERROR_LOG(format, ...) LSELOGMSG("ERROR",format, ##__VA_ARGS__)
+#define WARNING_LOG(format, ...) LSELOGMSG("WARNING", format, ##__VA_ARGS__)
+#define INFO_LOG(format, ...) LSELOGMSG("INFO", format, ##__VA_ARGS__)
+#define LSE_ASSERT(condition, format, ...)                  \
 do{                                                     \
     if (!(condition))                                   \
     {                                                   \
-        LSELOGMSG("ASSERTION FAILED", message);        \
+        LSELOGMSG("ASSERTION FAILED", format, ##__VA_ARGS__);        \
         exit(1);                                        \
     }                                                   \
 }while(0)
@@ -190,7 +201,7 @@ struct LSEFileHandle
 LSEFileHandle open_file_handle(char* file_path){
     LSEFileHandle file = {0};
     FILE* fd = fopen(file_path, "rb");
-    LSE_ASSERT(fd, "Failed to open file !");
+    LSE_ASSERT(fd, "Failed to open file %s !", file_path);
     if(fd == NULL)
     {
         printf("Error: Couldn't open file %s\n", file_path);
