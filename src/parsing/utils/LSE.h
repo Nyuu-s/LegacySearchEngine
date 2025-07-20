@@ -1,5 +1,5 @@
-#pragma once
-
+#ifndef LSE_H
+#define LSE_H
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>
@@ -230,3 +230,4 @@ size_t read_bufferchunk(LSEFileHandle* file, char* buffer, size_t chunk_size){
     }
     return 0;
 }
+#endif
