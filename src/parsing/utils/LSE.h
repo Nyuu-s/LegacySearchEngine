@@ -185,27 +185,28 @@ void* dyna_append_item(void* arr_data, void* ptr_item, size_t item_size){
     return array->data;
 }
 
+//Used for temporary string building, do not keep pointer to it as append may realloc to a new arena
 typedef struct StringBuilder{
-    void* data;
+    char* data;
     size_t capacity;
     size_t length;
     LSEArena* region;
 } StringBuilder;
 
 StringBuilder* sb_init(size_t initial_capacity){
-    LSEArena* region = arena_create(sizeof(StringBuilder)+(initial_capacity+1) * sizeof(char));
+    LSEArena* region = arena_create(sizeof(StringBuilder)+ initial_capacity * sizeof(char));
     LSE_ASSERT(region ,"error stringbuilder");
     if(!region){
         ERROR_LOG("error sb");
-        return;
+        return NULL;
     }
-    StringBuilder* sb = arena_alloc(region, sizeof(StringBuilder));
+    StringBuilder* sb = arena_alloc(region, sizeof(StringBuilder) + initial_capacity * sizeof(char));
     LSE_ASSERT(sb, "error allocate sb");
     if(!sb){
         ERROR_LOG("error allocate sb");
-        return;
+        return NULL;
     }
-    sb->data = sb+1;
+    sb->data = (char*) sb+1;
     sb->length = 0;
     sb->capacity = initial_capacity;
     sb->region = region;
@@ -222,7 +223,7 @@ void sb_append_char(StringBuilder* sb, char c){
         char* new_data = arena_alloc(sb->region, new_cap * sizeof(char));
         if(!new_data){
             WARNING_LOG("Sb arena is full copying all to new arena");
-            StringBuilder* new_sb = sb_init(sizeof(StringBuilder) + (new_cap+1) * sizeof(char));
+            StringBuilder* new_sb = sb_init(sizeof(StringBuilder) + (new_cap) * sizeof(char));
             LSE_ASSERT(new_sb, "error when sb full new region failed");
             memcpy(new_sb, sb->data, sb->length * sizeof(char));
             new_sb->length = sb->length;
