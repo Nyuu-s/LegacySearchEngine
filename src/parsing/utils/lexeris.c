@@ -10,7 +10,7 @@ typedef enum GTokenType{
     NON_TERMINAL,
     PUNCTUATION
 } GTokenType;
-//grammar token
+
 typedef struct GToken
 {
     char* value;
@@ -37,6 +37,7 @@ int main()
     unsigned long buffer_cursor = 0;
     while((bytesRead = read_bufferchunk(&file, readBufferWindow, READ_CHUNK_SIZE)) != 0){
         INFO_LOG("Reading chunk: %s", readBufferWindow);
+        char* token_val = 0;
         for (size_t i = 0; i < bytesRead; i++)
         {
             //lexer

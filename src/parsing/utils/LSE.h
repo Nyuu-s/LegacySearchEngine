@@ -185,7 +185,66 @@ void* dyna_append_item(void* arr_data, void* ptr_item, size_t item_size){
     return array->data;
 }
 
+typedef struct StringBuilder{
+    void* data;
+    size_t capacity;
+    size_t length;
+    LSEArena* region;
+} StringBuilder;
 
+StringBuilder* sb_init(size_t initial_capacity){
+    LSEArena* region = arena_create(sizeof(StringBuilder)+(initial_capacity+1) * sizeof(char));
+    LSE_ASSERT(region ,"error stringbuilder");
+    if(!region){
+        ERROR_LOG("error sb");
+        return;
+    }
+    StringBuilder* sb = arena_alloc(region, sizeof(StringBuilder));
+    LSE_ASSERT(sb, "error allocate sb");
+    if(!sb){
+        ERROR_LOG("error allocate sb");
+        return;
+    }
+    sb->data = sb+1;
+    sb->length = 0;
+    sb->capacity = initial_capacity;
+    sb->region = region;
+    return sb;
+}
+
+void sb_free(StringBuilder* sb){
+    arena_release(sb->region);
+}
+
+void sb_append_char(StringBuilder* sb, char c){
+    if(sb->length >= sb->capacity){
+        size_t new_cap = sb->capacity * 2;
+        char* new_data = arena_alloc(sb->region, new_cap * sizeof(char));
+        if(!new_data){
+            WARNING_LOG("Sb arena is full copying all to new arena");
+            StringBuilder* new_sb = sb_init(sizeof(StringBuilder) + (new_cap+1) * sizeof(char));
+            LSE_ASSERT(new_sb, "error when sb full new region failed");
+            memcpy(new_sb, sb->data, sb->length * sizeof(char));
+            new_sb->length = sb->length;
+            sb_free(sb);
+            sb = new_sb;
+        } else{
+            memcpy(new_data, sb->data, sb->length * sizeof(char));
+            sb->data = new_data;
+            sb->capacity = new_cap;
+        }
+        sb->data[sb->length++] = c;
+    }
+}
+
+
+char* sb_to_string(StringBuilder* sb, LSEArena* region){
+    char* str = arena_alloc(region, (sb->length+1) * sizeof(char));
+    memcpy(str, sb->data, sb->length * sizeof(char));
+    str[sb->length+1] = '\0';
+    sb->length = 0;
+    return str;
+}
 // #############################
 // #		File IO
 // #############################
