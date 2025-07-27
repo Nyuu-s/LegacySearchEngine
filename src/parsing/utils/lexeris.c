@@ -40,7 +40,6 @@ int main()
         INFO_LOG("Reading chunk: %s", readBufferWindow);
 
         StringBuilder* sb = sb_init(100);
-        char* token_val = 0;
         GToken t = {};
         for (size_t i = 0; i < bytesRead; i++)
         {
@@ -52,7 +51,7 @@ int main()
             {
                 t.value = sb_to_string(sb, filearena);
                 dyna_append_item(tokens, &t, sizeof(GToken));
-             
+                memset(&t, 0, sizeof(GToken));
                 
             }
         }
@@ -60,7 +59,7 @@ int main()
         dyna_append_item(tokens, &t, sizeof(GToken));
        
     }
-    for (size_t i = 0; i < 1; i++)
+    for (size_t i = 0; i < 4; i++)
     {
         printf("%s", tokens[i].value);
     }
