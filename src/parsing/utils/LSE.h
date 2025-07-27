@@ -194,19 +194,20 @@ typedef struct StringBuilder{
 } StringBuilder;
 
 StringBuilder* sb_init(size_t initial_capacity){
-    LSEArena* region = arena_create(sizeof(StringBuilder)+ initial_capacity * sizeof(char));
+    size_t aligned_size  = (initial_capacity + 7) & ~7;
+    LSEArena* region = arena_create(sizeof(StringBuilder)+ aligned_size * sizeof(char));
     LSE_ASSERT(region ,"error stringbuilder");
     if(!region){
         ERROR_LOG("error sb");
         return NULL;
     }
-    StringBuilder* sb = arena_alloc(region, sizeof(StringBuilder) + initial_capacity * sizeof(char));
+    StringBuilder* sb = arena_alloc(region, sizeof(StringBuilder) + aligned_size * sizeof(char));
     LSE_ASSERT(sb, "error allocate sb");
     if(!sb){
         ERROR_LOG("error allocate sb");
         return NULL;
     }
-    sb->data = (char*) sb+1;
+    sb->data = (char*) (sb+1);
     sb->length = 0;
     sb->capacity = initial_capacity;
     sb->region = region;
@@ -234,8 +235,8 @@ void sb_append_char(StringBuilder* sb, char c){
             sb->data = new_data;
             sb->capacity = new_cap;
         }
-        sb->data[sb->length++] = c;
     }
+    sb->data[sb->length++] = c;
 }
 
 

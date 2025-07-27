@@ -31,18 +31,40 @@ int main()
         return 1;
     }
     LSEArena* tokens_mem = arena_create(KB(10));
-    char* tokens = dyna_init(tokens_mem, 200, sizeof(GToken));
+    GToken* tokens = dyna_init(tokens_mem, 200, sizeof(GToken));
 
+    
     size_t bytesRead = 0;
     unsigned long buffer_cursor = 0;
     while((bytesRead = read_bufferchunk(&file, readBufferWindow, READ_CHUNK_SIZE)) != 0){
         INFO_LOG("Reading chunk: %s", readBufferWindow);
+
+        StringBuilder* sb = sb_init(100);
         char* token_val = 0;
+        GToken t = {};
         for (size_t i = 0; i < bytesRead; i++)
         {
-            //lexer
+            if (readBufferWindow[i] != ' ')
+            {
+                sb_append_char(sb, readBufferWindow[i]);
+            }
+            else
+            {
+                t.value = sb_to_string(sb, filearena);
+                dyna_append_item(tokens, &t, sizeof(GToken));
+             
+                
+            }
         }
+        t.value = sb_to_string(sb, filearena);
+        dyna_append_item(tokens, &t, sizeof(GToken));
+       
     }
+    for (size_t i = 0; i < 1; i++)
+    {
+        printf("%s", tokens[i].value);
+    }
+    
    
 
 }
